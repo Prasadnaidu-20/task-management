@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from fastapi import HTTPException
 from models import Task
 from database import tasks_collection
 from datetime import date
@@ -10,27 +11,32 @@ def serialize_task(task):
     return {
         "_id": str(task["_id"]),
         "title": task["title"],
-        "date": task["date"],
-        "completed": task["completed"]
+        "category": task.get("category"),
+        "priority": task.get("priority"),
+        "dueDate": task.get("dueDate"),
+        "date": task.get("date"),
+        "completed": task.get("completed", False)
     }
 
-@router.get("/tasks/today")
-def get_today_tasks():
-    today = str(date.today())
-    tasks = tasks_collection.find({"date": today})
+@router.get("/tasks/{task_id}")
+def get_Task(task_id: str):
+    task = tasks_collection.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return serialize_task(task) 
+
+@router.get("/tasks")
+def get_allTasks():
+    tasks = tasks_collection.find()  # ✅ fetch all documents
     return [serialize_task(task) for task in tasks]
 
-@router.get("/tasks/history")
-def get_history():
-    today = str(date.today())
-    tasks = tasks_collection.find({"date": {"$ne": today}})
-    return [serialize_task(task) for task in tasks]
-
-@router.post("/tasks")
+@router.post("/tasks/addTask")
 def add_task(task: Task):
     task.date = str(date.today())
-    tasks_collection.insert_one(task.dict())
-    return {"message": "Task added successfully"}
+    task_data = task.dict()
+    result = tasks_collection.insert_one(task_data)
+    task_data["_id"] = str(result.inserted_id)
+    return {"message": "Task added successfully","task": task_data}
 
 @router.patch("/tasks/{task_id}")
 def update_task(task_id: str, completed: bool):
