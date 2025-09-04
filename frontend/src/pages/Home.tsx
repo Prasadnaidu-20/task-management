@@ -1,87 +1,128 @@
-import { useEffect, useState } from "react";
-import { getTodayTasks, addTask, updateTask, deleteTask } from "../api";
-
-interface Task {
-  _id?: string;
-  title: string;
-  date: string;
-  completed: boolean;
-}
-
-export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTask, setNewTask] = useState("");
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    const res = await getTodayTasks();
-    setTasks(res.data);
-  };
-
-  const handleAdd = async () => {
-    if (!newTask.trim()) return;
-    await addTask(newTask);
-    setNewTask("");
-    fetchTasks();
-  };
-
-  const handleToggle = async (id: string, completed: boolean) => {
-    await updateTask(id, !completed);
-    fetchTasks();
-  };
-
-    const handleDelete = async (id: string) => {
-    if (!id) return;
-    await deleteTask(id);
-    fetchTasks(); // refresh list after deletion
-    };
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Bell, Settings, User, Calendar, CheckCircle2, Circle, Clock, TrendingUp, Filter, MoreHorizontal } from 'lucide-react';
+import SettingsPage from './SettingsPage';
+import Dashboard from './Dashboard';
+import Tasks from './Tasks';
+const TaskManager = () => {
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 
-  return (
-    <div className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Today's Tasks</h1>
+  // const [userData, setUserData] = useState(null);
+  // const [userSettings, setUserSettings] = useState({
+  //   profile: {
+  //     name: '',
+  //     email: '',
+  //     role: '',
+  //     timezone: 'America/New_York'
+  //   },
+  //   notifications: {
+  //     emailNotifications: true,
+  //     pushNotifications: true,
+  //     // ... other notification settings
+  //   },
+  //   // ... other settings
+  // });
 
-      <div className="flex mb-4">
-        <input
-          className="flex-1 border p-2 rounded-l"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Enter new task..."
-        />
-        <button
-          className="bg-blue-600 text-white px-4 rounded-r"
-          onClick={handleAdd}
-        >
-          Add
-        </button>
+  const Sidebar = () => (
+    <div className="w-64 bg-white/60 backdrop-blur-sm border-r border-slate-200/50 h-full p-6">
+      <div className="w-full flex items-center mb-8">
+        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+          <CheckCircle2 className="w-5 h-5 text-white" />
+        </div>
+        <span className="text-xl font-bold text-slate-800">TaskFlow Pro</span>
       </div>
-
-      <ul>
-        {tasks.map((task) => (
-          <li
-            key={task._id}
-            className="flex justify-between items-center p-2 border-b"
+      
+      <nav className="space-y-2">
+        {[
+          { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+          { id: 'tasks', label: 'All Tasks', icon: Circle },
+          { id: 'calendar', label: 'Calendar', icon: Calendar },
+          { id: 'progress', label: 'Weekly Progress', icon: Clock }
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setCurrentView(item.id)}
+            className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all ${
+              currentView === item.id 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' 
+                : 'text-slate-700 hover:bg-slate-100/50'
+            }`}
           >
-            <span
-              className={`cursor-pointer ${
-                task.completed ? "line-through text-gray-500" : ""
-              }`}
-              onClick={() => handleToggle(task._id || "", task.completed)}
-            >
-              {task.title}
-            </span>
-            <button
-              className="text-red-500"
-              onClick={() => handleDelete(task._id || "")}
-            >
-              ❌
-            </button>
-          </li>
+            <item.icon className="w-5 h-5 mr-3" />
+            {item.label}
+          </button>
         ))}
-      </ul>
+      </nav>
     </div>
   );
-}
+
+  const Header = () => (
+    <header className="w-full bg-white/60 backdrop-blur-sm border-b border-slate-200/50 px-8 py-4">
+      <div className="w-full flex items-center ">
+        <div className="flex items-center space-x-4">
+          <h2 className="text-2xl font-bold text-slate-800 capitalize">{currentView}</h2>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <Search className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <input 
+              type="text" 
+              placeholder="Search tasks..." 
+              className="pl-10 pr-4 py-2 bg-white/50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+            />
+          </div>
+          
+          <button className="relative p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+            <Bell className="w-5 h-5" />
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+          </button>
+          
+          <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" onClick={()=> setShowSettings(!showSettings)}>
+            <Settings className="w-5 h-5" />
+          </button>
+          {showSettings && <SettingsPage/>}
+          
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-white" />
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+
+  const renderContent = () => {
+    switch (currentView) {
+      // case 'progress':
+        // return <WeeklyProgress />;
+      case 'dashboard':
+        return <Dashboard />;
+      case 'tasks':
+        return <Tasks/>
+        
+
+      }          
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="flex w-full h-screen">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-auto p-8">
+            {renderContent()}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+export default TaskManager;

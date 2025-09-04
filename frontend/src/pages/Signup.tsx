@@ -3,15 +3,13 @@ import { useState } from "react";
 import { login, signup } from "../api";
 
 export default function Signup() {
+      const [name,setName]=useState("");
       const [email, setEmail] = useState("");
       const [password, setPassword] = useState("");
       const [error, setError] = useState("");
       const handleSignup = async () => {
         try {
-          const res:any=await signup(email, password);
-          if(res.status!==200||res.status!==201){
-            throw new Error("Signup failed");
-          }
+          await signup(name,email, password);
           alert("Signup successful ✅");
           window.location.href = "/"; // redirect to home
         } catch (err: any) {
@@ -54,6 +52,15 @@ export default function Signup() {
           </div>
           
           <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-3">User Name</label>
+              <input 
+                type="text" 
+                className="w-full px-4 py-4 bg-white/50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-lg"
+                placeholder="Enter your username"
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-3">Email Address</label>
               <input 
