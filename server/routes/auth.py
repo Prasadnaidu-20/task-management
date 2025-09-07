@@ -8,7 +8,6 @@ from database import users_collection  # create users collection in db.py
 import os
 
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -50,23 +49,13 @@ def login(user: User):
         SECRET_KEY,
         algorithm=ALGORITHM,
     )
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer","name": str(db_user["name"]),"email": db_user["email"]}
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-    user = users_collection.find_one({"username": username}, {"_id": 0, "password": 0})
+@router.get("/users/{user_id}")
+def get_user(user_id: str):
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+        return {"error": "User not found"}
+    return {"_id": str(user["_id"]), "name": user["name"], "email": user["email"]}
 
-@router.get("/me")
-async def read_users_me(current_user: dict = Depends(get_current_user)):
-    return current_user

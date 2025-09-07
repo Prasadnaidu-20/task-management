@@ -17,6 +17,8 @@ export const signup = async (name:string ,email: string, password: string) =>{
 export const login = async (name:string,  email: string, password: string) => {
   const res = await axios.post(`${API_URL}/login`, { name ,email, password });
   localStorage.setItem("token", res.data.access_token);
+  localStorage.setItem("userName", res.data.name);
+  localStorage.setItem("userEmail", res.data.email);
   return res.data;
 };
 
@@ -40,18 +42,33 @@ export const getTasks = async () => {
   }
 };
 
+export const getUser = async (userId: string) =>{
+  try{
+    const response = await axios.get(`${API_URL}/users/${userId}`);
+    return response.data;
+  }
+  catch(error){
+    console.error("Error fetching user",error);
+    throw error;
+  }
+}
+
 export const addTask = async (
   title: string,
   priority: string,
   category: string,
-  dueDate: Date
+  dueDate: Date,
+  completed: boolean,
+  pinned : boolean
 ) => {
   try {
     const response = await axios.post(`${API_URL}/tasks/addTask`, {
       title,
       category,
       priority,
-      dueDate,   
+      dueDate,
+      completed,
+      pinned   
     });
     
     return response.data; // ✅ return data to caller
@@ -62,8 +79,24 @@ export const addTask = async (
   }
 };
 
-export const updateTask = (id: string, completed: boolean) =>
-  axios.patch(`${API_URL}/tasks/${id}?completed=${completed}`);
+export const updateTask = (taskId: string, completed: boolean) => {
+  const res = fetch(`${API_URL}/tasks/${taskId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ completed }),
+  });
+  return res;
+};
+  // axios.patch(`${API_URL}/tasks/${id}?completed=${completed}`);
+
 export const deleteTask = (id: string) => axios.delete(`${API_URL}/tasks/${id}`);
 
+export const updatePinnedTask = (taskId: string, pinned: boolean) => {
+  const res = fetch(`${API_URL}/tasks/${taskId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pinned }),
+  });
+  return res;
+};
 

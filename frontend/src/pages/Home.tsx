@@ -3,30 +3,10 @@ import { Plus, Search, Bell, Settings, User, Calendar, CheckCircle2, Circle, Clo
 import SettingsPage from './SettingsPage';
 import Dashboard from './Dashboard';
 import Tasks from './Tasks';
+// import UserDetails from './UserDetails';
 const TaskManager = () => {
   const [currentView, setCurrentView] = useState('dashboard');
-  const [dashboardData, setDashboardData] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showAddTask, setShowAddTask] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-
-  // const [userData, setUserData] = useState(null);
-  // const [userSettings, setUserSettings] = useState({
-  //   profile: {
-  //     name: '',
-  //     email: '',
-  //     role: '',
-  //     timezone: 'America/New_York'
-  //   },
-  //   notifications: {
-  //     emailNotifications: true,
-  //     pushNotifications: true,
-  //     // ... other notification settings
-  //   },
-  //   // ... other settings
-  // });
+  const [open, setOpen] = useState(false)
 
   const Sidebar = () => (
     <div className="w-64 bg-white/60 backdrop-blur-sm border-r border-slate-200/50 h-full p-6">
@@ -63,7 +43,7 @@ const TaskManager = () => {
 
   const Header = () => (
     <header className="w-full bg-white/60 backdrop-blur-sm border-b border-slate-200/50 px-8 py-4">
-      <div className="w-full flex items-center ">
+      <div className="w-full flex items-center justify-between ">
         <div className="flex items-center space-x-4">
           <h2 className="text-2xl font-bold text-slate-800 capitalize">{currentView}</h2>
         </div>
@@ -83,14 +63,12 @@ const TaskManager = () => {
             <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
           </button>
           
-          <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" onClick={()=> setShowSettings(!showSettings)}>
+          <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" onClick={()=> setOpen(true)}>
             <Settings className="w-5 h-5" />
           </button>
-          {showSettings && <SettingsPage/>}
           
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-white" />
-          </div>
+          
+
         </div>
       </div>
     </header>
@@ -120,6 +98,7 @@ const TaskManager = () => {
           </main>
         </div>
       </div>
+      {open &&<SettingsPage open={open} onClose={() => setOpen(false)} />}
     </div>
   );
 };

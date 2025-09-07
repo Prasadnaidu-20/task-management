@@ -11,7 +11,14 @@ class Task(BaseModel):
     priority: Optional[str] = None
     dueDate: Optional[str] = None
     date: Optional[str] = str(date.today())
-    completed: bool = False
+    completed: bool
+    pinned: bool
+
+class TaskupdatePayLoad(BaseModel):
+    completed: bool
+    
+class TaskupdatePinPayload(BaseModel):
+    pinned: bool
 
 class User(BaseModel):
     name: str
